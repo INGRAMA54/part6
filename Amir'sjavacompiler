@@ -1,0 +1,57 @@
+import java.util.*;
+
+public class ConstantFolding {
+  
+  public static void main(String[] args) {
+    
+    // Sample intermediate code
+    List<String> intermediateCode = new ArrayList<String>();
+    intermediateCode.add("LOAD_CONST 10");
+    intermediateCode.add("LOAD_CONST 20");
+    intermediateCode.add("BINARY_ADD");
+    intermediateCode.add("STORE_RESULT");
+
+    // Print the original intermediate code
+    System.out.println("Original intermediate code:");
+    for (String instr : intermediateCode) {
+      System.out.println(instr);
+    }
+
+    // Perform constant folding optimization
+    for (int i = 0; i < intermediateCode.size(); i++) {
+      String instr = intermediateCode.get(i);
+      if (instr.startsWith("LOAD_CONST")) {
+        int value = Integer.parseInt(instr.split(" ")[1]);
+        for (int j = i + 1; j < intermediateCode.size(); j++) {
+          String nextInstr = intermediateCode.get(j);
+          if (nextInstr.startsWith("LOAD_CONST")) {
+            value = eval(value, nextInstr.split(" ")[1], instr.startsWith("LOAD_CONST_LONG"));
+            i = j;
+          } else {
+            break;
+          }
+        }
+        intermediateCode.set(i, "LOAD_CONST " + value);
+      }
+    }
+
+    // Print the optimized intermediate code
+    System.out.println("\nOptimized intermediate code:");
+    for (String instr : intermediateCode) {
+      System.out.println(instr);
+    }
+  }
+
+  private static int eval(int a, String b, boolean isLong) {
+    int value = Integer.parseInt(b);
+    if (isLong) {
+      long result = (long) a + (long) value;
+      if (result > Integer.MAX_VALUE || result < Integer.MIN_VALUE) {
+        throw new ArithmeticException("Integer overflow");
+      }
+      return (int) result;
+    } else {
+      return a + value;
+    }
+  }
+}
